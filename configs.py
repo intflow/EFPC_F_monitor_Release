@@ -14,7 +14,7 @@ key_match_dict = {
     'cam_id' : 'id'
 }
 
-MUST_copy_edgefarm_config_list=[] # model 업데이트 됐을 때 "model" 추가 시켜주기!
+MUST_copy_edgefarm_config_list=["model"] # model 업데이트 됐을 때 "model" 추가 시켜주기!
 not_copy_DB_config_list=[]
 
 server_api_path = "/device/info"
