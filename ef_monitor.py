@@ -75,7 +75,7 @@ def control_edgefarm_monitor(control_queue, docker_repo, control_thread_cd):
             print("5. kill : Kill Edgefarm engine. (Warning) Auto Run Service will be stopped")
             print("6. autostart : Start Auto Run Service")
             print("7. autostop : Stop Auto Run Service")
-            print("8. export : create intflow model engine")
+            print("8. export : create intflow model engine. Please run \"5. kill\" first.")
             print("10. images : show \"{}\" docker images".format(docker_repo + ":" + configs.docker_image_tag_header))
             print("11. updatecheck : Check Last docker image from docker hub")
             print("12. updateimage : Pull lastest version image from docker hub")
