@@ -4,6 +4,8 @@ import configs
 from utils import *
 import shutil
 import subprocess
+import json
+import datetime as dt
 
 git_pull_done = False
 c_dir = os.path.dirname(os.path.abspath(__file__))
@@ -37,12 +39,12 @@ def git_pull():
     now_dt = dt.datetime.now()
     # print(now_dt)
     
-    # 11시 50분에 pull 받기
-    if now_dt.hour == 23 and now_dt.minute >= 50:
+    # pull 받기
+    if now_dt.hour == configs.update_hour and now_dt.minute == configs.update_min:
     # if now_dt.hour == 16 and now_dt.minute >= 38:
-        print("\n  git pull from remote repository")
         try:
             if git_pull_done == False:
+                print("\n  git pull from remote repository")
                 git_dir = c_dir  
                 repo = git.Repo(git_dir)
                 # 변경사항 지우기
@@ -63,3 +65,4 @@ def git_pull():
     
 if __name__ == "__main__":
     copy_firmwares()
+    # git_pull()

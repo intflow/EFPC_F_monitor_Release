@@ -445,6 +445,21 @@ def device_install():
             if rtsp_src_address is not None:
                 with open('/edgefarm_config/rtsp_address.txt', 'w') as rtsp_src_addr_file:
                     rtsp_src_addr_file.write(rtsp_src_address)
+                    
+        # update time set
+        update_time_str = ""
+        if "update_time" in device_info:
+            update_time_str = device_info["update_time"]
+        # else:
+
+        if len(update_time_str) > 0:
+            update_time_slice = update_time_str.split(":")
+            if len(update_time_slice) == 3:
+                configs.update_hour, configs.update_min, configs.update_sec = list(map(int,update_time_slice))
+            else:
+                print("Invalid data type : \"update_time\"")
+        else:
+            configs.update_hour, configs.update_min, configs.update_sec = [23, 50, 0]                            
 
     else:
         print("device_info is None!")
@@ -452,7 +467,8 @@ def device_install():
         with open(configs.edgefarm_config_path, "r") as edgefarm_config_file:
             edgefarm_config = json.load(edgefarm_config_file)
         
-        # edgefarm_config["device_id"] = -1
+        edgefarm_config["device_id"] = -1
+        edgefarm_config["cam_id"] = -1
             
         # file save
         with open(configs.edgefarm_config_path, "w") as edgefarm_config_file:
@@ -487,6 +503,10 @@ def is_process_running(process_name):
         if name == process_name:
             return True
     return False
+
+def KST_timezone_set():
+    subprocess.run("sudo ln -sf /usr/share/zoneinfo/Asia/Seoul /etc/localtime", shell=True)
+    print("Set TimeZone to Seoul")
 
 if __name__ == "__main__":
     # subprocess.call(f"docker login docker.io -u \"{configs.docker_id}\" -p \"{configs.docker_pw}\"", shell=True)
