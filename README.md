@@ -1,4 +1,16 @@
-
+# model 업데이트 하기
+## 1. onnx 파일 넣기
+.onnx 파일을 git repo의 `edgefarm_config/model/`에 넣기
+## 2. model_version.txt 업데이트하기
+`edgefarm_config/model/model_version.txt` 파일을 열어서 버전을 올려준다.<br>
+`model_version.txt` 파일 예시
+```
+1.0.0.0
+```
+## 3. commit 및 push 하기
+위의 과정이 완료되면 commit & push를 해준다.
+<br>
+<br>
 
 # 0 
 ```
@@ -44,12 +56,8 @@ Set the model to load on its own device
 
 # 3. dependency
 ```
-sudo apt install -y python3-pip
-python3 -m pip install pip
-python3 -m pip install getmac
-python3 -m pip install natsort
-python3 -m pip install gitpython
-python3 -m pip install psutil
+sudo apt install -y python3-pip && \
+python3 -m pip install pip getmac natsort gitpython psutil
 ```
 <br>
 
@@ -74,8 +82,4 @@ Smart_Recoding  # 녹화할 영상의 title ex)darvi_hallway
 # 6 auto runs service 
 ```
 bash autorun_service_registration.sh
-bash autorun_service_start.sh
-```
-```
-bash autorun_service_stop.sh
 ```
