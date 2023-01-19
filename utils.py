@@ -430,7 +430,7 @@ def model_update_check(git_edgefarm_config_path):
     
     return lastest
 
-def model_update_check():
+def model_update_check_tmp():
     print("Check Model version...")
     lastest = True
     serial_number = read_serial_number()
