@@ -1,7 +1,7 @@
 FAN_SPEED = 150
 
 API_HOST = "http://intflowserver2.iptime.org:20051"
-
+API_HOST2 = "http://intflowserver2.iptime.org:60080"
 docker_repo = "intflow/efpc_f"
 docker_image_tag_header_list = ["dev", "res"] # res 우선
 docker_image_tag_header = "None" # Don't Touch!! 수정하지 말고 놔두기!! 자동으로 잡음.
@@ -21,7 +21,7 @@ MUST_copy_edgefarm_config_list=[]
 not_copy_DB_config_list=[]
 
 server_api_path = "/device/info"
-
+access_api_path = "/device/access"
 last_ip = None
 
 log_save_dir_path = "/home/intflow/works/logs/"
