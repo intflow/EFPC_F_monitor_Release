@@ -540,32 +540,55 @@ def device_install():
     if device_info is not None and len(device_info) > 0:
         # 정보 받아왔으면 일단 edgefarm_config 들 복사
         print(device_info)
-        device_info = device_info[0]
+        device_info = device_info
 
         # file read
         with open(configs.edgefarm_config_json_path, "r") as edgefarm_config_file:
             edgefarm_config = json.load(edgefarm_config_file)
-        for key, val in edgefarm_config.items():
-            if key in device_info:
-                if key in configs.not_copy_DB_config_list:
-                    continue
-                else:
-                    print(f'{key} : {val} -> {device_info[key]}')
-                    edgefarm_config[key] = device_info[key]
-            else:
-                key_match(key, edgefarm_config, device_info)
+        edgefarm_config['device_id']=device_info['id']
+        edgefarm_config['end_interval']=device_info['camera_list'][0]['end_interval']
+        edgefarm_config['reboot_time']=device_info['reboot_time']
+        edgefarm_config['update_time']=device_info['update_time']
+        edgefarm_config['upload_time']=device_info['upload_time']
+        edgefarm_config['linegap']=device_info['camera_list'][0]['linegap']
+        edgefarm_config['linegap_position']=device_info['camera_list'][0]['linegap_position']
+        edgefarm_config['cam_id']=device_info['camera_list'][0]['id']
+        rtsp_src_address=device_info['camera_list'][0]["rtsp"]
+        edgefarm_config['vpi_k1']=device_info['camera_list'][0]["vpi_k1"]
+        edgefarm_config['vpi_k2']=device_info['camera_list'][0]["vpi_k2"]
+        edgefarm_config['x_scale']=device_info['camera_list'][0]["x_scale"]
+        edgefarm_config['y_scale']=device_info['camera_list'][0]["y_scale"]
+        edgefarm_config['x_rotate']=device_info['camera_list'][0]["x_rotate"]
+        edgefarm_config['y_rotate']=device_info['camera_list'][0]["y_rotate"]
+        edgefarm_config['zx_perspect']=device_info['camera_list'][0]["zx_perspect"]
+        edgefarm_config['zy_perspect']=device_info['camera_list'][0]["zy_perspect"]
+        edgefarm_config['x_pad']=device_info['camera_list'][0]["x_pad"]
+        edgefarm_config['y_pad']=device_info['camera_list'][0]["y_pad"]
+        edgefarm_config['x_focus']=device_info['camera_list'][0]["x_focus"]
+        edgefarm_config['y_focus']=device_info['camera_list'][0]["y_focus"]
+        edgefarm_config['weight_bias']=device_info['camera_list'][0]["weight_bias"]
+        edgefarm_config['age']=device_info['camera_list'][0]["age"]
+        edgefarm_config['hallway_width_cm']=device_info['camera_list'][0]["chessboard_cm"]
+        edgefarm_config['hallway_width_pixel']=device_info['camera_list'][0]["chessboard_px"]
+        edgefarm_config['linegap']=device_info['camera_list'][0]["linegap"]
+        edgefarm_config['linegap_position']=device_info['camera_list'][0]["linegap_position"]
+        edgefarm_config['linegap_position']=device_info['camera_list'][0]["linegap_position"]
+        edgefarm_config['limit_min_weight']=device_info['camera_list'][0]["limit_min_weight"]
+        edgefarm_config['limit_max_weight']=device_info['camera_list'][0]["limit_max_weight"]
 
         # file save
         with open(configs.edgefarm_config_json_path, "w") as edgefarm_config_file:
             json.dump(edgefarm_config, edgefarm_config_file, indent=4)
 
         # rtsp address set
-        if 'default_rtsp' in device_info:
-            rtsp_src_address = device_info['default_rtsp']
-            print(f"\nRTSP source address : {rtsp_src_address}\n")
-            if rtsp_src_address is not None:
-                with open('/edgefarm_config/rtsp_address.txt', 'w') as rtsp_src_addr_file:
-                    rtsp_src_addr_file.write(rtsp_src_address)
+        with open('/edgefarm_config/rtsp_address.txt', 'w') as rtsp_src_addr_file:
+            rtsp_src_addr_file.write(rtsp_src_address)
+        # if 'default_rtsp' in device_info:
+        #     rtsp_src_address = device_info['default_rtsp']
+        #     print(f"\nRTSP source address : {rtsp_src_address}\n")
+        #     if rtsp_src_address is not None:
+        #         with open('/edgefarm_config/rtsp_address.txt', 'w') as rtsp_src_addr_file:
+        #             rtsp_src_addr_file.write(rtsp_src_address)
                     
         # update time set
         update_time_str = ""
