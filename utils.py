@@ -154,7 +154,7 @@ def run_docker(docker_image, docker_image_id):
     
     docker_log_save_start()    
 
-def export_model(docker_image,docker_image_id, mode=""):
+def export_model(docker_image, docker_image_id, mode=""):
     if docker_image == None or docker_image_id == None:
         for i in range(10):
             print("\nNo Docker Image...\n")
@@ -403,44 +403,19 @@ def read_firmware_version():
         firmware_versiontxt = mvf.readline()
     return firmware_versiontxt.split('\n')[0]
 
-def model_update_check(git_edgefarm_config_path):
-    with open(os.path.join(git_edgefarm_config_path, "model/model_version.txt"), 'r') as mvf:
-        git_model_version = mvf.readline()
-    with open(os.path.join(configs.local_edgefarm_config_path, "model/model_version.txt"), 'r') as mvf:
-        local_model_version = mvf.readline()
-    
-    print("\nmodel version (git:local)")
-    print(f'{git_model_version} : {local_model_version}\n')
-    
-    git_model_version = git_model_version.split('.')
-    local_model_version = local_model_version.split('.')
-    
-    ver_length = len(git_model_version)
-    
-    lastest = True
-    
-    for i in range(ver_length):
-        g_v = int(''.join([x for x in git_model_version[i] if x.isdigit()]))
-        l_v = int(''.join([x for x in local_model_version[i] if x.isdigit()]))
-        # print(g_v, l_v)
-        if g_v <= l_v:
-            continue
-        else:
-            lastest = False
-    
-    return lastest
-
-def model_update_check_tmp():
+def model_update_check(check_only = False):
     print("Check Model version...")
     lastest = True
+    
     serial_number = read_serial_number()
 
-    model_file_name = f"{serial_number}/intflow_model.onnx"
-    # local_model_file_path = '/home/intflow/works/company_logo.png'
-    local_model_file_path = '/edgefarm_config/model/intflow_model.onnx'
+    model_file_name = f"{serial_number}/{configs.server_model_file_name}"
+    local_model_file_path = os.path.join(configs.local_edgefarm_config_path, configs.local_model_file_relative_path)
+    
+    print(f"s3://{configs.server_bucket_of_model}/{model_file_name}")
 
     try:
-        res = subprocess.check_output(f"aws s3api head-object --bucket intflow-models --key {model_file_name}", shell=True)
+        res = subprocess.check_output(f"aws s3api head-object --bucket {configs.server_bucket_of_model} --key {model_file_name}", shell=True)
     except Exception as e:
         print("Can not find model file in server!")
         return False
@@ -471,21 +446,36 @@ def model_update_check_tmp():
         lastest = False
     elif last_modified_server <= last_modified_local:
         print("Lastest version of model")
-        
-    return lastest
 
-def model_update(git_edgefarm_config_path, mode=""):
+    if not check_only and lastest == False:
+        # 혹시 엣지팜 켜져있으면 끄기.
+        while check_deepstream_status():
+            print("Try to kill Edgefarm Engine...")
+            kill_edgefarm()
+            time.sleep(1)
+        # model 업데이트하기
+        model_update(mode='sync')
+
+def model_update(mode=""):
     # /edgefarm_config/model 디렉토리가 없으면 생성.
     if not os.path.exists(os.path.join(configs.local_edgefarm_config_path, "model")):
         os.makedirs(os.path.join(configs.local_edgefarm_config_path, "model"), exist_ok=True)
+        
+    serial_number = read_serial_number()
     
     print("Start Model Update!")
-    copy_to(os.path.join(git_edgefarm_config_path, "model/intflow_model.onnx"), os.path.join(configs.local_edgefarm_config_path, "model/intflow_model.onnx"))
+    
+    model_file_name = f"{serial_number}/{configs.server_model_file_name}"
+    local_model_file_path = os.path.join(configs.local_edgefarm_config_path, configs.local_model_file_relative_path)
+    
+    # 서버에서 모델 파일 복사해오기
+    # copy_to(os.path.join(git_edgefarm_config_path, "model/intflow_model.onnx"), os.path.join(configs.local_edgefarm_config_path, "model/intflow_model.onnx"))
+    subprocess.run(f"aws s3 cp s3://{configs.server_bucket_of_model}/{model_file_name} {local_model_file_path}", shell=True)
+    
     docker_image, docker_image_id = find_lastest_docker_image(configs.docker_repo)
     # onnx to engine
     export_model(docker_image, docker_image_id, mode=mode)
-    # 버전 파일 복사.
-    copy_to(os.path.join(git_edgefarm_config_path, "model/model_version.txt"), os.path.join(configs.local_edgefarm_config_path, "model/model_version.txt"))
+    # # 버전 파일 복사.
     if mode == "sync" : print("\nModel Update Completed")
 
 def edgefarm_config_check():
@@ -498,14 +488,14 @@ def edgefarm_config_check():
     git_edgefarm_config_path = os.path.join(current_dir, "edgefarm_config")
     
     # 모델 관련 파일이 있나 검사. 하나라도 없으면 복사해주고 모델 export
-    model_related_list = ['model', 'model/intflow_model.onnx', 'model/intflow_model.engine', 'model/model_version.txt']
+    model_related_list = ['model', 'model/intflow_model.onnx', 'model/intflow_model.engine']
     no_model = False
     for m_i in model_related_list:
         tmp_p = os.path.join(configs.local_edgefarm_config_path, m_i)
         if not os.path.exists(tmp_p):
             no_model = True
     if no_model:    
-        model_update(git_edgefarm_config_path, mode='sync')
+        model_update(mode='sync')
     
     # 디렉토리 내부 검색을 위한 일회용 재귀함수.
     def listdirs(rootdir):
@@ -526,16 +516,6 @@ def edgefarm_config_check():
                 listdirs(path)
                 
     listdirs(git_edgefarm_config_path) 
-    
-    # 모델 버전 체크 후 업데이트 여부 결정.
-    if model_update_check(git_edgefarm_config_path) == False:
-        # 혹시 엣지팜 켜져있으면 끄기.
-        while check_deepstream_status():
-            print("Try to kill Edgefarm Engine...")
-            kill_edgefarm()
-            time.sleep(1)
-        # model 업데이트하기
-        model_update(git_edgefarm_config_path, mode='sync')
             
 def key_match(src_key, src_data, target_data):
     if src_key in configs.key_match_dict:
@@ -714,6 +694,16 @@ if __name__ == "__main__":
     
     # print(configs.docker_image_tag_header)
     # edgefarm_config_check()
-    device_install()
+    # device_install()
+    model_update_check(check_only = True)
+    
+    # if model_update_check() == False:
+    #     # 혹시 엣지팜 켜져있으면 끄기.
+    #     while check_deepstream_status():
+    #         print("Try to kill Edgefarm Engine...")
+    #         kill_edgefarm()
+    #         time.sleep(1)
+    #     # model 업데이트하기
+    #     model_update(mode='sync')    
 
 
