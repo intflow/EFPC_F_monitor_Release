@@ -548,14 +548,14 @@ def device_install():
     # 만약 이 repo 에 있는 edgefarm_config.json 의 키가 /edgefarm_config/edgefarm_config.json 에 없으면 해당 키만 추가해주기.
     
     # mac address 뽑기
-    mac_address = getmac.get_mac_address().replace(':','')
+    mac_address = getmac.get_mac_address()
     serial_number=read_serial_number()
     firmware_version=read_firmware_version()    
     docker_repo = configs.docker_repo
     docker_image, docker_image_id = find_lastest_docker_image(docker_repo)
     docker_image_tag_header = configs.docker_image_tag_header
     e_version=docker_image.replace(docker_image_tag_header+'_','').split('_')[0]
-    device_info=send_json_api(configs.access_api_path, getmac.get_mac_address(),serial_number,firmware_version)
+    device_info=send_json_api(configs.access_api_path, mac_address, serial_number, firmware_version)
     # device 정보 받기 (api request)
     # device_info = send_api(configs.server_api_path, mac_address, e_version)
     
@@ -660,6 +660,51 @@ def docker_log_view():
         print(out.decode(), end='')
 
     docker_log_end_print()
+    
+def send_ak_api(path, mac_address, serial_number):
+    url = configs.API_HOST2 + path + '/' 
+    content={}
+    content['mac_address']=mac_address
+    content['serial_number']=serial_number
+    print(url)
+    
+    try:
+        # response = requests.post(url, data=json.dumps(metadata))
+        response = requests.put(url, json=content)
+
+        print("response status : %r" % response.status_code)
+        if response.status_code == 200:
+            # return True
+            return response.json()
+        else:
+            # return False
+            return None
+        # return response.json()
+    except Exception as ex:
+        print(ex)
+        # return False
+        return None    
+    
+def check_aws_install():
+    res = os.popen('which aws').read()
+
+    if "/usr/local/bin/aws" in res:
+        print("AWS CLI installed")
+        pass
+    else:
+        print("Install AWS CLI ...")
+        subprocess.run("bash ./aws_cli_build.sh", shell=True)
+        
+    mac_address = getmac.get_mac_address()
+    serial_number=read_serial_number()
+        
+    akres = send_ak_api("/device/upload/key", mac_address, serial_number)
+
+    if not os.path.isdir("/home/intflow/.aws"):
+        os.makedirs("/home/intflow/.aws", exist_ok=True)
+
+    with open("/home/intflow/.aws/credentials", "w") as f:
+        f.write(f"[default]\naws_access_key_id = {akres['access']}\naws_secret_access_key = {akres['secret']}\n")
 
 def show_docker_images_list(docker_image_head):
     subprocess.run("docker images --filter=reference=\"{}*\"".format(docker_image_head), shell=True)
@@ -695,15 +740,10 @@ if __name__ == "__main__":
     # print(configs.docker_image_tag_header)
     # edgefarm_config_check()
     # device_install()
-    model_update_check(check_only = True)
+    # model_update_check(check_only = True)
     
-    # if model_update_check() == False:
-    #     # 혹시 엣지팜 켜져있으면 끄기.
-    #     while check_deepstream_status():
-    #         print("Try to kill Edgefarm Engine...")
-    #         kill_edgefarm()
-    #         time.sleep(1)
-    #     # model 업데이트하기
-    #     model_update(mode='sync')    
+    # check_aws_install()  
+    
+    check_aws_install()
 
 

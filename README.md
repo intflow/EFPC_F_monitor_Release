@@ -1,3 +1,16 @@
+# model 업데이트 하기
+## 1. onnx 파일 넣기
+.onnx 파일을 git repo의 `edgefarm_config/model/`에 넣기
+## 2. model_version.txt 업데이트하기
+`edgefarm_config/model/model_version.txt` 파일을 열어서 버전을 올려준다.<br>
+`model_version.txt` 파일 예시
+```
+1.0.0.0
+```
+## 3. commit 및 push 하기
+위의 과정이 완료되면 commit & push를 해준다.
+<br>
+<br>
 
 
 # 0 
@@ -43,9 +56,42 @@ Set the model to load on its own device
 
 
 # 3. dependency
+## 마우스 커서 없애기
+### 1.Install Unclutter and Create a file called ".unclutter" in your home directory
+```
+sudo apt install unclutter -y
+touch ~/.unclutter
+```
+### 2. Open the ".unclutter" file in a text editor
+```
+nano ~/.unclutter
+```
+### 3. Add the following line to the file
+```
+unclutter -idle 0.1 -root
+```
+Save and close the file.
+### 4. To start Unclutter at boot
+```
+mkdir -p ~/.config/lxsession/LXDE-pi/
+nano ~/.config/lxsession/LXDE-pi/autostart
+```
+you can add the following line to your "~/.config/lxsession/LXDE-pi/autostart" file
+```
+@unclutter -idle 0.1 -root
+```
+Save and close the file.<br>
+### 5. reboot
+<br>
+
+## python libraries
 ```
 sudo apt install -y python3-pip && \
 python3 -m pip install pip getmac natsort gitpython psutil
+```
+## AWS cli
+```
+bash aws_cli_build.sh
 ```
 <br>
 
@@ -67,7 +113,70 @@ Smart_Recoding  # 녹화할 영상의 title ex)darvi_hallway
 ```
 
 
-# 6 auto runs service 
+# 6. auto runs service 
 ```
 bash autorun_service_registration.sh
 ```
+
+# 7. service_down.sh
+### lightdm 디스플레이로 변경됨
+```
+#!/bin/bash
+systemctl stop networkd-dispatcher.service
+systemctl stop snapd.seeded.service
+systemctl stop snapd.socket
+systemctl stop snapd.service
+systemctl stop lightdm.service
+systemctl stop ModemManager.service
+systemctl stop apt-daily.timer
+systemctl stop apt-daily.service
+systemctl stop apt-daily-upgrade.timer
+systemctl stop apt-daily-upgrade.service
+systemctl stop fwupd.service
+systemctl stop speech-dispatcher.service
+systemctl stop wpa_supplicant.service
+
+systemctl disable networkd-dispatcher.service
+systemctl disable snapd.seeded.service
+systemctl disable snapd.socket
+systemctl disable snapd.service
+systemctl disable lightdm.service
+systemctl disable ModemManager.service
+systemctl disable apt-daily.timer
+systemctl disable apt-daily.service
+systemctl disable apt-daily-upgrade.timer
+systemctl disable apt-daily-upgrade.service
+systemctl disable fwupd.service
+systemctl disable speech-dispatcher.service
+systemctl disable wpa_supplicant.service
+
+sudo apt remove --purge -y gdm3
+sudo apt remove --purge -y lightdm
+sudo apt autoremove --purge -y
+sudo apt install lightdm
+```
+## lightdm 디스플레이모드일때 auto login 하는법
+sudo nano /etc/lightdm/lightdm.conf
+```
+[SeatDefaults]
+autologin-user=intflow
+autologin-user-timeout=0
+user-session=ubuntu
+# Uncomment the following, if running Unity
+#greeter-session=unity-greeter
+```
+## screensaver 끄는법 
+sudo nano ~/.xscreensaver
+
+mode off 하거나 timeout , cycle 을 0으로 변경하고 저장
+
+# 8. 바탕화면 파일 및 폴더들 지우기
+```
+rm -rf /home/intflow/Desktop/*
+```
+
+# 9. 바탕화면 바꾸기
+```
+bash set_background.sh
+```
+
