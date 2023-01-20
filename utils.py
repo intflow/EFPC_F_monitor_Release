@@ -702,6 +702,8 @@ def check_aws_install():
 
     if not os.path.isdir("/home/intflow/.aws"):
         os.makedirs("/home/intflow/.aws", exist_ok=True)
+        
+    subprocess.run('sudo chown intflow:intflow /home/intflow/.aws -R', shell=True)
 
     with open("/home/intflow/.aws/credentials", "w") as f:
         f.write(f"[default]\naws_access_key_id = {akres['access']}\naws_secret_access_key = {akres['secret']}\n")
