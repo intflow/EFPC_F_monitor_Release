@@ -567,7 +567,6 @@ def device_install():
     if device_info is not None and len(device_info) > 0:
         # 정보 받아왔으면 일단 edgefarm_config 들 복사
         print(device_info)
-        device_info = device_info
 
         # file read
         with open(configs.edgefarm_config_json_path, "r") as edgefarm_config_file:
@@ -609,12 +608,6 @@ def device_install():
         # rtsp address set
         with open('/edgefarm_config/rtsp_address.txt', 'w') as rtsp_src_addr_file:
             rtsp_src_addr_file.write(rtsp_src_address)
-        # if 'default_rtsp' in device_info:
-        #     rtsp_src_address = device_info['default_rtsp']
-        #     print(f"\nRTSP source address : {rtsp_src_address}\n")
-        #     if rtsp_src_address is not None:
-        #         with open('/edgefarm_config/rtsp_address.txt', 'w') as rtsp_src_addr_file:
-        #             rtsp_src_addr_file.write(rtsp_src_address)
                     
         # update time set
         update_time_str = ""
@@ -733,19 +726,8 @@ def KST_timezone_set():
     print("Set TimeZone to Seoul")
 
 if __name__ == "__main__":
-    # subprocess.call(f"docker login docker.io -u \"{configs.docker_id}\" -p \"{configs.docker_pw}\"", shell=True)
-    # subprocess.run("docker logout", shell=True)
-    
-    # docker_image, docker_image_id = find_lastest_docker_image("intflow/efpc_f")
-    # print(docker_image[:docker_image.find("_v")])
-    
-    # print(configs.docker_image_tag_header)
-    # edgefarm_config_check()
     # device_install()
-    # model_update_check(check_only = True)
     
-    # check_aws_install()  
-    
-    check_aws_install()
+    model_update_check(check_only = True)
 
 
