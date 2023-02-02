@@ -88,9 +88,13 @@ def port_status_check(port):
         return False
     
 def port_info_set():
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.connect(("8.8.8.8", 80))
-    configs.last_ip=s.getsockname()[0].split('.')[-1]
+    res = subprocess.run("route -n | grep 'UG[ \\t]' | awk '{print $2}'", shell=True, stdout=subprocess.PIPE)
+
+    if len(res.stdout) > 0:
+        hostname_tmp = subprocess.check_output("hostname -I", shell=True)
+        configs.last_ip = hostname_tmp.decode().split(' ')[0].split('.')[-1]  
+    else:
+        configs.last_ip = "54"
 
     with open(configs.edgefarm_port_info_path, 'r') as port_info_f:
         content = port_info_f.readlines()
@@ -738,10 +742,6 @@ def show_docker_images_list(docker_image_head):
   
 def set_background():
     subprocess.Popen(f"pcmanfm --set-wallpaper=\"{os.path.join(current_dir, 'imgs/intflow_wallpaper.jpg')}\"", shell=True)
-
-def run_blackBox():
-    # subprocess.run("xrandr -s 640x480", shell=True)
-    subprocess.run("/home/intflow/works/firmwares/efpc_box", shell=True)
      
 def is_process_running(process_name):
     # Iterate over all running processes
